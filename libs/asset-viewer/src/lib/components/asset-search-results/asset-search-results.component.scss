@@ -1,0 +1,58 @@
+@use "../../styles/variables";
+@use "../../styles/drawer-panel-mixins" as drawerPanel;
+
+:host {
+  @include drawerPanel.drawer-panel-width;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: variables.$grey-01;
+}
+
+@include drawerPanel.draw-panel-header;
+
+.header {
+  padding: 16px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.search-results {
+  display: flex;
+  flex-wrap: wrap;
+  height: 400px;
+}
+
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  display: block;
+  width: 100%;
+  padding-left: 16px;
+
+  .mat-table {
+    width: max-content;
+    overflow-y: scroll;
+    display: block;
+  }
+
+  .table {
+    box-shadow: none;
+
+    .table__header {
+      height: 40px;
+    }
+
+    .mat-column-titlePublic {
+      word-wrap: break-word;
+    }
+
+    .selected {
+      background-color: variables.$grey-01;
+    }
+  }
+}

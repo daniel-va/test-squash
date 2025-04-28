@@ -1,0 +1,127 @@
+services:
+  storage:
+    container_name: swissgeol-assets-storage
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_USER}
+      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
+    volumes:
+      - ./volumes/minio/data:/data
+    command: server --console-address ":9001" /data
+
+  db:
+    container_name: swissgeol-assets-postgres
+    image: postgis/postgis
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - ./init/db:/docker-entrypoint-initdb.d
+      - ./init/dump.sql:/dump.sql
+      - ./volumes/db/data/postgres:/var/lib/postgresql/data
+      - ./init/testing/give_admin_perm.sql:/give_admin_perm.sql
+      - ./init/testing/static_entities.sql:/static_entities.sql
+
+    healthcheck:
+      test: "pg_isready -U ${DB_USER} -d postgres -h db"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    container_name: swissgeol-assets-pgadmin
+    image: dpage/pgadmin4
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - 5051:5050
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 5050
+    volumes:
+      - ./volumes/pgadmin/data:/var/lib/pgadmin
+
+  elasticsearch:
+    container_name: swissgeol-assets-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
+    restart: unless-stopped
+    entrypoint: ["/bin/tini", "--"]
+    command: ["sh", "-c", "/init/init.sh & /usr/local/bin/docker-entrypoint.sh"]
+    ports:
+      - 9200:9200
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.security.enabled: false
+      discovery.type: single-node
+      cluster.routing.allocation.disk.threshold_enabled: false
+    volumes:
+      - ./init/elasticsearch/:/init/:ro
+      - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
+
+  kibana:
+    container_name: swissgeol-assets-kibana
+    image: docker.elastic.co/kibana/kibana:8.12.1
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+  smtp4dev:
+    container_name: swissgeol-assets-smtp
+    image: rnwood/smtp4dev:v3
+    restart: unless-stopped
+    ports:
+      - "5000:80"
+    volumes:
+      - ./volumes/smtp4dev/data:/smtp4dev
+    environment:
+      - ServerOptions__HostName=smtp4dev
+
+  oidc:
+    container_name: swissgeol-assets-oidc
+    image: ghcr.io/soluto/oidc-server-mock
+    restart: unless-stopped
+    ports:
+      - "4011:8080"
+    environment:
+      CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
+      USERS_CONFIGURATION_PATH: /tmp/config/users-config.json
+      API_SCOPES_PATH: /tmp/config/scopes-config.json
+      SERVER_OPTIONS_PATH: /tmp/config/server_options-config.json
+    volumes:
+      - ./init/oidc/oidc-mock-clients.json:/tmp/config/clients-config.json:ro
+      - ./init/oidc/oidc-mock-users.json:/tmp/config/users-config.json:ro
+      - ./init/oidc/oidc-mock-scopes.json:/tmp/config/scopes-config.json:ro
+      - ./init/oidc/oidc-mock-server_options.json:/tmp/config/server_options-config.json:ro
+      - ./volumes/oidc/keys:/tmp/data/keys
+
+  ocr:
+    container_name: swissgeol-assets-ocr
+    # TODO change this to `latest` once it is released.
+    image: ghcr.io/swisstopo/swissgeol-ocr-api:edge
+    restart: unless-stopped
+    ports:
+      - "5052:8000"
+    environment:
+      TMP_PATH: /tmp/ocr/
+      SKIP_PROCESSING: true
+      S3_INPUT_BUCKET: asset-sg
+      S3_INPUT_FOLDER: /
+      S3_OUTPUT_BUCKET: asset-sg
+      S3_OUTPUT_FOLDER: /
+      CONFIDENCE_THRESHOLD: 0.7
+      USE_AGGRESSIVE_STRATEGY: false

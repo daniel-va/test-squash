@@ -1,0 +1,111 @@
+@use "../../styles/variables";
+@use "../../styles/mixins";
+@use "../../styles/drawer-panel-mixins" as drawerPanel;
+
+:host {
+  @include drawerPanel.drawer-panel-width;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  gap: 24px;
+}
+
+@include drawerPanel.draw-panel-header;
+@include drawerPanel.draw-panel-header-underline;
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #dee2e6;
+  padding: 21px 0;
+  margin: 0;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: calc(100vh - 88px - 80px - 24px - 24px);
+}
+
+.ellipsis {
+  max-width: 150px;
+  @include mixins.text-ellipsis;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+}
+
+h4 {
+  font-weight: 500;
+  margin: 0;
+  line-height: 20px;
+  font-size: 14px;
+  color: variables.$grey-10;
+}
+
+.filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: scroll;
+
+  .section {
+    background-color: white;
+    border-radius: 4px;
+  }
+
+  .filters {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+
+    section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+  margin-bottom: 0;
+  transition: margin-bottom 150ms ease-in-out;
+}
+
+.mat-mdc-form-field.with-error {
+  margin-bottom: 1.6rem;
+}
+
+.input-clear-button {
+  color: variables.$cyan-09;
+}
+
+::ng-deep .mat-mdc-option.author > .mdc-list-item__primary-text {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+
+  & > .author__name {
+    flex: 1 1 100%;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  & > .author__count {
+    flex: auto;
+  }
+}

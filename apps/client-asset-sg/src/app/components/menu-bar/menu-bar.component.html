@@ -1,0 +1,48 @@
+<ng-container *rxLet="activeItem$; let activeItem">
+  <ul class="submenu">
+    <li
+      *rxLet="activeItem === 'home'; let isActive"
+      asset-sg-menu-bar-item
+      icon="assets"
+      [badge]="isActive ? (activeFilterCount$ | async) : null"
+      [isActive]="isActive"
+      (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: false })"
+    >
+      menuBar.filters
+    </li>
+    @if (userExists$ | async) {
+    <li
+      *rxLet="activeItem === 'favorites'; let isActive"
+      asset-sg-menu-bar-item
+      icon="favorite"
+      [badge]="isActive ? (activeFilterCount$ | async) : null"
+      [isActive]="isActive"
+      (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
+    >
+      menuBar.favourites
+    </li>
+    }
+    <li
+      *canCreate="AssetEditPolicy"
+      asset-sg-menu-bar-item
+      icon="add"
+      [link]="[translateService.currentLang, 'asset-admin', 'new']"
+      [isActive]="activeItem === 'create-asset'"
+    >
+      menuBar.createAsset
+    </li>
+  </ul>
+
+  <ul class="submenu">
+    <li
+      *adminOnly
+      asset-sg-menu-bar-item
+      icon="options"
+      [link]="[translateService.currentLang, 'asset-admin']"
+      [isActive]="activeItem === 'options'"
+    >
+      menuBar.settings
+    </li>
+    <li asset-sg-menu-bar-item icon="help" disabled>menuBar.help</li>
+  </ul>
+</ng-container>

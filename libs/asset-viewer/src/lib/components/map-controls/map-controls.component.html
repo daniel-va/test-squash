@@ -1,0 +1,27 @@
+<button
+  class="map-control-button"
+  asset-sg-tertiary
+  [matTooltip]="'map.zoomIn' | translate"
+  matTooltipPosition="left"
+  (click)="zoom.zoomIn()"
+>
+  <svg-icon key="zoom-plus" />
+</button>
+<button
+  class="map-control-button"
+  asset-sg-tertiary
+  [matTooltip]="'map.zoomToOrigin' | translate"
+  matTooltipPosition="left"
+  (click)="zoom.resetZoom()"
+>
+  <svg-icon key="zoom-origin" />
+</button>
+<button
+  class="map-control-button"
+  asset-sg-tertiary
+  [matTooltip]="'map.zoomOut' | translate"
+  matTooltipPosition="left"
+  (click)="zoom.zoomOut()"
+>
+  <svg-icon key="zoom-minus" />
+</button>

@@ -1,0 +1,22 @@
+@use "../../styles/variables";
+
+::ng-deep .workgroups-tooltip {
+  font-size: 12px;
+}
+
+.users {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+}
+
+.mat-column-isAdmin,
+.mat-column-languages {
+  width: 97px;
+  padding: 0;
+}
