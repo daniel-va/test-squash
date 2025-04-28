@@ -5,9 +5,6 @@ on:
     branches:
       - "develop"
 
-      # TODO remove before merge
-      - "chore/assets-519-versionierung-an-cicd-anpassen"
-
 # Run all publish workflow in sequence to ensure consistent version numbers.
 concurrency:
   group: "publish"
