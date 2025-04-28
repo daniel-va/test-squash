@@ -1,3 +1,5 @@
+import { findLatestDevVersion, findLatestReleaseVersion } from "./package.utils.mjs";
+
 const SEMANTIC_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-\w+)?$/;
 export const parseVersion = (tag) => {
   if (!SEMANTIC_VERSION_PATTERN.test(tag)) {
@@ -30,52 +32,101 @@ export const stringifyVersion = (version) => {
   return `${string}-${version.preRelease.tag}${version.preRelease.number ?? ""}`;
 };
 
-export const incrementVersionBySourceBranch = (version, sourceBranch, tag) => {
+export const isSameVersion = (a, b, { ignorePreRelease }) => {
+  const isEqual = a.major === b.major && a.minor === b.minor && a.patch === b.patch;
+  return (
+    (ignorePreRelease && isEqual) ||
+    (isEqual && a.preRelease?.tag === b.preRelease?.tag && a.preRelease?.number === b.preRelease?.number)
+  );
+};
+
+export const compareBaseVersions = (a, b) => {
+  if (a.major !== b.major) {
+    return a.major - b.major;
+  }
+  if (a.minor !== b.minor) {
+    return a.major - b.major;
+  }
+  return a.patch - b.patch;
+};
+
+export const incrementDevVersion = (version) => {
+  const tag = "dev";
+
   // if there is no previous version,
   // then we start with a new pre-release version.
   if (version === null) {
     return { major: 1, minor: 0, patch: 0, preRelease: { tag, number: 1 } };
   }
 
-  // Sources starting with `feature/` contain minor changes.
-  // If we do not have a source branch, we also assume minor changes.
-  if (sourceBranch === null || sourceBranch.startsWith("feature/")) {
-    // If the previous version was a full release,
-    // or if it was a patch pre-release,
-    // then we increment the minor version and reset the pre-release number.
-    if (version.preRelease === null || version.patch !== 0) {
-      return {
-        ...version,
-        minor: version.minor + 1,
-        patch: 0,
-        preRelease: { tag, number: 1 },
-      };
-    }
-
-    // If the previous version was a minor pre-release,
-    // then we increment the pr-release number.
-    return {
-      ...version,
-      preRelease: { tag, number: version.preRelease.number + 1 },
-    };
-  }
-
-  // Sources not starting with `feature/` contain patch changes.
-
   // If the previous version was a full release,
-  // then we increment the patch version and reset the pre-release number.
-  if (version.preRelease === null) {
+  // or if it was a patch pre-release,
+  // then we increment the minor version and reset the pre-release number.
+  if (version.preRelease === null || version.patch !== 0) {
     return {
       ...version,
-      patch: version.patch + 1,
+      minor: version.minor + 1,
+      patch: 0,
       preRelease: { tag, number: 1 },
     };
   }
 
-  // If the previous version was a pre-release of any kind,
-  // then we increment the pr-release number.
+  // If the previous version was a minor pre-release,
+  // then we increment the pre-release number.
   return {
     ...version,
     preRelease: { tag, number: version.preRelease.number + 1 },
+  };
+};
+
+export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
+  // Merges from `develop` are "normal" release candidates.
+  // They take their version from the latest dev release.
+  if (sourceBranch === "develop") {
+    const { findLatestDevVersion, findLatestRcVersion } = await import("./package.utils.mjs");
+    const tag = "rc";
+
+    const devVersion = await findLatestDevVersion();
+    if (devVersion === null) {
+      throw new Error("Merge from 'develop' expects a dev release to be present, but none was found.");
+    }
+
+    const rcVersion = await findLatestRcVersion();
+    if (rcVersion === null || !isSameVersion(devVersion, rcVersion, { ignorePreRelease: true })) {
+      // If there is no rc version or if the dev version has a different base then the rc version,
+      // then we use the dev version as base and simply start with the number set to 1.
+      return { ...devVersion, preRelease: { tag, number: 1 } };
+    }
+
+    // If the previous rc version had the same base version as the dev version,
+    // we only need to increment the preRelease number.
+    return { ...rcVersion, preRelease: { tag, number: rcVersion.preRelease.number + 1 } };
+  }
+
+  // Sources other than `develop` are considered to be hotfixes.
+
+  const { findLatestReleaseVersion, findLatestHotfixVersion } = await import("./package.utils.mjs");
+  const tag = "hotfix";
+
+  const releaseVersion = await findLatestReleaseVersion();
+  if (releaseVersion === null) {
+    throw new Error("Hotfix expects a release to be present, but none was found.");
+  }
+
+  const hotfixVersion = await findLatestHotfixVersion();
+  if (hotfixVersion === null || compareBaseVersions(releaseVersion, hotfixVersion) >= 0) {
+    // If there is no preceding hotfix or if the hotfix has already been released,
+    // then we use the release version but increase its patch number.
+    return {
+      ...releaseVersion,
+      patch: releaseVersion.patch + 1,
+      preRelease: { tag, number: 1 },
+    };
+  }
+
+  // If the preceding hotfix has not yet been released, we simply increment its version number.
+  return {
+    ...hotfixVersion,
+    preRelease: { tag, number: hotfixVersion.number + 1 },
   };
 };
