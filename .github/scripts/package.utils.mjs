@@ -14,13 +14,13 @@ const images = {
  * @returns {Promise<object|null>} The latest dev version, or `null`.
  */
 export const findLatestDevVersion = async () => {
-  const { parseVersion } = await import("./version.utils.js");
+  const { parseVersion } = await import("./version.utils.mjs");
 
   const { owner, name } = getImageInfo(images.api);
 
   let page = 0;
   while (true) {
-    const data = await fetchPackagePage(owner, name, page)
+    const data = await fetchPackagePage(owner, name, page);
     if (data.length === 0) {
       return null;
     }
@@ -43,7 +43,7 @@ const getImageInfo = (url) => {
 };
 
 const fetchPackagePage = async (owner, name, page) => {
-  const { getOctokit } = await import("./octokit.js");
+  const { getOctokit } = await import("./octokit.mjs");
   const octokit = await getOctokit();
   try {
     // TODO change this to getAllPackageVersionsForPackageOwnedByOrg
@@ -55,11 +55,11 @@ const fetchPackagePage = async (owner, name, page) => {
       page,
       per_page: 100,
     });
-    return response.data
+    return response.data;
   } catch (e) {
     if (e.status === 404) {
-      return []
+      return [];
     }
-    throw e
+    throw e;
   }
-}
+};

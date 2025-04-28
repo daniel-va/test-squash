@@ -11,7 +11,7 @@
  * @returns {Promise<[string|null, string]>} The source and target branch names.
  */
 export const findSourceAndTargetBranches = async (context) => {
-  const { getOctokit } = await import("./octokit.js");
+  const { getOctokit } = await import("./octokit.mjs");
   const octokit = await getOctokit();
 
   // The branch on which the current workflow is running.
