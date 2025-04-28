@@ -1,0 +1,34 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2021", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@asset-sg/admin": ["libs/admin/src/index.ts"],
+      "@asset-sg/asset-editor": ["libs/asset-editor/src/index.ts"],
+      "@asset-sg/asset-viewer": ["libs/asset-viewer/src/index.ts"],
+      "@asset-sg/auth": ["libs/auth/src/index.ts"],
+      "@asset-sg/client-shared": ["libs/client-shared/src/index.ts"],
+      "@asset-sg/core": ["libs/core/src/index.ts"],
+      "@asset-sg/favorites": ["libs/favorites/src/index.ts"],
+      "@asset-sg/profile": ["libs/profile/src/index.ts"],
+      "@asset-sg/shared": ["libs/shared/src/index.ts"],
+      "@asset-sg/shared/v2": ["libs/shared/v2/src/index.ts"],
+      "@asset-sg/shared/v2/test-helpers": ["libs/shared/v2/src/test-helpers.ts"],
+      "persistence": ["libs/persistence/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

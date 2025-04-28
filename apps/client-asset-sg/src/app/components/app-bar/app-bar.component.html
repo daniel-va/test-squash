@@ -1,0 +1,23 @@
+<a routerLink="/" class="logo">
+  <img src="../../../assets/swissgeol_assets.svg" alt="{{ 'logoSwissGeol' | translate }}" width="130" height="36" />
+</a>
+<ng-content />
+<div class="spacer"></div>
+<span class="version">{{ version }}</span>
+
+<asset-sg-language-selector />
+
+<ng-container *ngIf="(isAnonymous$ | async) === false">
+  <button asset-sg-primary isIcon type="button" class="profile" [matMenuTriggerFor]="profileMenu">
+    <svg-icon key="profile" />
+  </button>
+
+  <mat-menu #profileMenu="matMenu" backdropClass="profile">
+    <ng-container *rxLet="user$; let user">
+      <div>{{ user.firstName }} {{ user.lastName }}</div>
+      <div>
+        <button asset-sg-secondary translate (click)="logout()">logout</button>
+      </div>
+    </ng-container>
+  </mat-menu>
+</ng-container>

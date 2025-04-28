@@ -1,0 +1,27 @@
+<mat-progress-bar *ngIf="isLoading$ | async" mode="indeterminate" class="loading-bar" />
+<asset-sg-map [highlightedAssetId]="highlightedAssetId" (assetsClick)="assetClicked$.next($event)" />
+
+<asset-sg-asset-picker
+  class="asset-picker"
+  [assets]="assetsForPicker$"
+  [currentAssetId]="currentAssetId$"
+  (assetMouseOver)="highlightedAssetId = $event"
+/>
+
+<ng-template #templateAppBarPortalContent>
+  <div class="search-input-wrapper">
+    <svg-icon key="search" />
+    <input
+      #searchInput
+      class="search-input"
+      [placeholder]="'search.textSearchFieldPlaceholder' | translate"
+      (keydown)="_searchTextKeyDown$.next($event)"
+    />
+  </div>
+</ng-template>
+
+<asset-sg-asset-search-refine *ngIf="isFiltersOpen$ | async" class="mat-elevation-z4" [style.visibility]="'visible'" />
+
+<asset-sg-asset-search-results class="mat-elevation-z2" (assetMouseOver)="highlightedAssetId = $event" />
+
+<asset-sg-asset-search-detail *ngIf="hasCurrentAsset$ | async" class="mat-elevation-z4" />

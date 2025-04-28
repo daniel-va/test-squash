@@ -1,0 +1,113 @@
+@use "../../styles/variables";
+
+$sub-navigation-bar-height: 84px;
+
+:host ::ng-deep .navigation .navigation__link {
+  .mdc-tab__text-label {
+    color: variables.$cyan-09;
+  }
+
+  .mdc-tab__text-label:hover {
+    color: variables.$cyan-09;
+  }
+}
+
+:host {
+  background-color: variables.$grey-03;
+}
+
+.loading-bar {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background-color: variables.$grey-03;
+}
+
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.header {
+  height: $sub-navigation-bar-height;
+  background-color: variables.$white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 0 24px;
+
+  .back-button {
+    height: 36px;
+    width: 36px;
+    padding: 0;
+  }
+}
+
+h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 28px;
+}
+
+.main {
+  padding: 40px;
+  background-color: variables.$grey-01;
+  height: calc(100% - $sub-navigation-bar-height);
+}
+
+.inactive-overlay {
+  height: calc(100vh - $sub-navigation-bar-height - 88px);
+  width: 100%;
+  pointer-events: all;
+  position: absolute;
+  background-color: #f5f6f8;
+  opacity: 50%;
+  left: 0;
+  top: calc($sub-navigation-bar-height + 88px);
+  z-index: 1000;
+}
+
+.content {
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: variables.$white;
+  padding: 24px;
+  border: 1px solid variables.$grey-02;
+}
+
+.navigation-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 16px;
+}
+
+.navigation {
+  display: flex;
+  font-size: 16px;
+
+  .navigation__link {
+    position: relative;
+    bottom: -1px;
+    color: black;
+    text-decoration: none;
+    padding: 24px;
+    font-weight: 400;
+
+    &--active {
+      color: variables.$cyan-09;
+      background-color: white;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      border: 1px solid variables.$grey-02;
+      border-bottom: none;
+    }
+  }
+
+  .pointer {
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,39 @@
+@use "../../styles/variables";
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.user-data {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+
+  .filter-container {
+    width: 400px;
+  }
+
+  mat-checkbox {
+    margin-top: 12px;
+  }
+}
+
+.mat-column-amount {
+  width: 147px;
+}
+
+.mat-column-role {
+  width: 223px;
+}
+
+.mat-column-isActive {
+  width: 97px;
+}
+
+.mat-column-actions {
+  width: 52px;
+  text-align: right;
+  padding-left: 0;
+}

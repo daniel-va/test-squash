@@ -1,0 +1,14 @@
+# Add files here to ignore them from prettier formatting
+
+/.angular
+/.husky
+/.nx
+/coverage
+/dist
+/node_modules
+/tmp
+/.idea
+/development/volumes
+
+# Prettier breaks Go templates.
+/k8s/**/*.yaml

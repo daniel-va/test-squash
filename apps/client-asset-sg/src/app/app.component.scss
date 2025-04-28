@@ -1,0 +1,101 @@
+@use "styles/variables";
+@use "@angular/material" as mat;
+@use "../theme" as *;
+
+$app-bar-height: 88px;
+$menu-bar-width: 80px;
+
+:host {
+  display: grid;
+  background-color: white;
+  position: relative;
+}
+
+asset-sg-app-bar {
+  grid-area: app-bar;
+}
+
+asset-sg-menu-bar {
+  grid-area: menu-bar;
+}
+
+.drawer-portal {
+  position: absolute;
+  top: $app-bar-height;
+  left: $menu-bar-width;
+  height: calc(100vh - $app-bar-height);
+}
+
+.router-outlet {
+  grid-area: router-outlet;
+  display: grid;
+
+  router-outlet {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 1194px) {
+  :host {
+    margin: 0 auto;
+    grid-template-areas: "app-bar app-bar" "menu-bar router-outlet";
+    grid-template-rows: $app-bar-height calc(100vh - $app-bar-height);
+    grid-template-columns: $menu-bar-width 1fr;
+    box-shadow: 0 0 60px 0 rgb(0 0 0 / 60%);
+    --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
+
+    &.menu-hidden {
+      grid-template-areas: "app-bar app-bar" "router-outlet router-outlet";
+      grid-template-columns: 1fr;
+      --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
+    }
+  }
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  grid-column: 1 / -1;
+  padding: 40px;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bolder;
+
+  color: mat.m2-get-color-from-palette($asset-sg-warn, 600);
+}
+
+.alerts {
+  position: fixed;
+  width: min(30rem, 95vw);
+
+  bottom: 2rem;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+
+  /// angular-cdk-overlay is at 1000, so we go to 1500.
+  z-index: 1500;
+}
+
+.forbidden {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+
+  h1 {
+    font-size: 4rem;
+    margin: 0;
+    color: mat.m2-get-color-from-palette($asset-sg-warn, 300);
+  }
+
+  p {
+    font-size: 1.5rem;
+    margin: 0;
+    padding: 1rem 0 0 0;
+    color: mat.m2-get-color-from-palette($asset-sg-warn, 200);
+  }
+}

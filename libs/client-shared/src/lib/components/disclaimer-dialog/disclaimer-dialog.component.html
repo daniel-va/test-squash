@@ -1,0 +1,23 @@
+<div>
+  <div class="header">
+    <h2 translate>disclaimer.title</h2>
+    <asset-sg-language-selector></asset-sg-language-selector>
+  </div>
+  <mat-divider></mat-divider>
+  <div mat-dialog-content class="content">
+    <h3 translate>disclaimer.liability.title</h3>
+    <p [innerHTML]="'disclaimer.liability.content' | translate"></p>
+
+    <h3 translate>disclaimer.tracking.title</h3>
+    <p [innerHTML]="'disclaimer.tracking.content' | translate : { external: legalAnchor$ | async }"></p>
+  </div>
+  <div mat-dialog-content>
+    <mat-checkbox #consentCheckbox [(ngModel)]="hasConsented" color="primary" class="checkbox" tabIndex="0">
+      <span translate>disclaimer.tracking.consentLabel</span>
+    </mat-checkbox>
+  </div>
+  <mat-divider></mat-divider>
+  <div mat-dialog-actions class="actions">
+    <button asset-sg-primary (click)="close()" translate>disclaimer.accept</button>
+  </div>
+</div>

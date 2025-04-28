@@ -1,0 +1,12 @@
+<ul>
+  <li *rxFor="let filter of filters; trackBy: 'value'">
+    <button
+      asset-sg-secondary
+      [disabled]="filter.count === 0 && !filter.isActive"
+      [class.active]="filter.isActive"
+      (click)="toggle(filter)"
+    >
+      {{ filter.name | smartTranslate }} ({{ filter.count }})
+    </button>
+  </li>
+</ul>
