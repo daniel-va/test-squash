@@ -51,7 +51,7 @@ const fetchPackagePage = async (owner, name, page) => {
       package_type: "container",
       package_name: name,
       // TODO change this to `org: name`
-      username: name,
+      username: owner,
       page,
       per_page: 100,
     });
