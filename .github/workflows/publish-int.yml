@@ -3,7 +3,7 @@ name: Publish DEV
 on:
   push:
     branches:
-      - "develop"
+      - "main"
 
 # Run all publish workflow in sequence to ensure consistent version numbers.
 concurrency:
@@ -32,15 +32,14 @@ jobs:
           result-encoding: string
           script: |
             const { findSourceAndTargetBranches } = await import('${{ github.workspace }}/.github/scripts/branch.utils.mjs');
-            const { findBaseVersionForDev } = await import('${{ github.workspace }}/.github/scripts/package.utils.mjs');
+            const { findLatestRcVersion } = await import('${{ github.workspace }}/.github/scripts/package.utils.mjs');
             const {
-              incrementDevVersion,
+              determineNextRcVersionBySourceBranch,
               stringifyVersion,
             } = await import('${{ github.workspace }}/.github/scripts/version.utils.mjs');
 
-            const prevVersion = await findBaseVersionForDev();
             const [source, target] = await findSourceAndTargetBranches(context);
-            const nextVersion = incrementDevVersion(prevVersion, source);
+            const nextVersion = await determineNextRcVersionBySourceBranch(source);
 
             return stringifyVersion(nextVersion);
 
