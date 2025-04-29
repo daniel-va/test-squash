@@ -33,7 +33,7 @@ export const stringifyVersion = (version) => {
   return `${string}-${version.preRelease.tag}${version.preRelease.number ?? ""}`;
 };
 
-export const isSameVersion = (a, b, { ignorePreRelease }) => {
+export const isSameVersion = (a, b, { ignorePreRelease } = {}) => {
   const isEqual = a.major === b.major && a.minor === b.minor && a.patch === b.patch;
   return (
     (ignorePreRelease && isEqual) ||
