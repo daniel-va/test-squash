@@ -163,10 +163,11 @@ const fetchPackagePage = async (owner, name, page) => {
 };
 
 export const removePackageVersions = async (versions) => {
-  const { Octokit } = await import("@octokit/rest");
+  const { getOctokit } = await import("./octokit.mjs");
+  const octokit = await getOctokit();
 
   for (const image of Object.values(images)) {
-    const { host, owner, name } = getImageInfo(image);
+    const { owner, name } = getImageInfo(image);
     for (const version of versions) {
       let packageId = null;
       await loadVersions({
