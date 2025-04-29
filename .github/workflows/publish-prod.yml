@@ -171,4 +171,5 @@ jobs:
 
             const version = parseVersion(process.env.CURRENT_VERSION);
             const outdatedVersions = await findOutdatedVersions(version);
+            console.log({ version, outdatedVersions });
             await removePackageVersions(outdatedVersions);

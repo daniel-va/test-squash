@@ -61,8 +61,14 @@ export const findOutdatedVersions = async (latestVersion) => {
         return;
       }
       const hasReleaseTag = tags.has("edge") || tags.has("release-candidate") || tags.has("latest");
-      if (!hasReleaseTag && compareBaseVersions(latestVersion, version) > 0) {
+      if (!hasReleaseTag && compareBaseVersions(latestVersion, version) >= 0) {
         outdatedVersions.push(version);
+      } else {
+        console.log('skipping version', {
+          version,
+          hasReleaseTag,
+          cmp: compareBaseVersions(latestVersion, version),
+        })
       }
     },
     abort: () => false,
