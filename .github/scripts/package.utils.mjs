@@ -22,34 +22,34 @@ export const findBaseVersionForDev = () =>
  * Attempts to parse the latest dev version from the published packages.
  * @returns {Promise<object|null>} The latest dev version, or `null`.
  */
-export const findLatestDevVersion = () => findLatestVersionByPredicate((version) => version.preRelease.tag === "dev");
+export const findLatestDevVersion = () => findLatestVersionByPredicate((version) => version.preRelease?.tag === "dev");
 
 /**
  * Attempts to parse the latest release candidate version from the published packages.
  * @returns {Promise<object|null>} The latest rc version, or `null`.
  */
-export const findLatestRcVersion = () => findLatestVersionByPredicate((version) => version.preRelease.tag === "rc");
+export const findLatestRcVersion = () => findLatestVersionByPredicate((version) => version.preRelease?.tag === "rc");
 
 /**
  * Attempts to parse the latest hotfix version from the published packages.
  * @returns {Promise<object|null>} The latest hotfix version, or `null`.
  */
 export const findLatestHotfixVersion = () =>
-  findLatestVersionByPredicate((version) => version.preRelease.tag === "hotfix");
+  findLatestVersionByPredicate((version) => version.preRelease?.tag === "hotfix");
 
 /**
  * Attempts to parse the latest hotfix version from the published packages.
  * @returns {Promise<object|null>} The latest hotfix version, or `null`.
  */
 export const findLatestReleasableVersion = () =>
-  findLatestVersionByPredicate((version) => version.preRelease.tag === "hotfix" || version.preRelease.tag === "rc");
+  findLatestVersionByPredicate((version) => version.preRelease?.tag === "hotfix" || version.preRelease?.tag === "rc");
 
 /**
  * Attempts to parse the latest release version from the published packages.
  * @returns {Promise<object|null>} The latest release version, or `null`.
  */
 export const findLatestReleaseVersion = () =>
-  findLatestVersionByPredicate((version) => version.preRelease.tag === null);
+  findLatestVersionByPredicate((version) => version.preRelease?.tag == null);
 
 export const findOutdatedVersions = async (latestVersion) => {
   const outdatedVersions = [];
