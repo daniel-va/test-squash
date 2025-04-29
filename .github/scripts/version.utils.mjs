@@ -11,7 +11,7 @@ export const parseVersion = (tag) => {
     major: parseInt(major),
     minor: parseInt(minor),
     patch: parseInt(patch),
-    preRelease: preRelease.length === 0 ? null : parsePreRelease(preRelease),
+    preRelease: (preRelease === undefined || preRelease.length === 0) ? null : parsePreRelease(preRelease),
   };
 };
 

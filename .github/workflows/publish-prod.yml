@@ -10,17 +10,30 @@ concurrency:
 permissions: write-all
 
 jobs:
+  enforce-main:
+    name: "enforce main"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if not on main
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "This job must be run on the main branch."
+            exit 1
+          fi
+
   determine-version:
     name: "determine version"
+    needs:
+      - enforce-main
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.find-version.outputs.result }}
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: "Install dependencies"
+      - name: Install dependencies
         run: npm install @octokit/rest
-      - name: "Find version"
+      - name: Find version
         id: find-version
         uses: actions/github-script@v7
         env:
@@ -125,13 +138,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Create release
-        uses: softprops/action-gh-release@v2
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: "${{ needs.determine-version.outputs.version }}"
-          name: "swissgeol-assets v${{ needs.determine-version.outputs.version }}"
-          generate_release_notes: true
-          make_latest: true
+          release_name: "swissgeol Assets v${{ needs.determine-version.outputs.version }}"
+          body_file: CHANGELOG.md
 
   cleanup:
     name: "cleanup"
