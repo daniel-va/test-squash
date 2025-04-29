@@ -84,7 +84,7 @@ export const findLatestVersionByPredicate = async (test) => {
 };
 
 const CACHED_VERSIONS = [];
-let FIRST_UNCACHED_VERSION_PAGE = 0;
+let FIRST_UNCACHED_VERSION_PAGE = 1;
 
 const loadVersions = async ({ receive, abort, package: packageName }) => {
   const isCacheable = packageName === undefined || packageName === packages.api;
@@ -105,7 +105,7 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
 
   const { owner, name } = getPackageInfo(packageName ?? packages.api);
 
-  let page = isCacheable ? FIRST_UNCACHED_VERSION_PAGE : 0;
+  let page = isCacheable ? FIRST_UNCACHED_VERSION_PAGE : 1;
   while (true) {
     const data = await fetchPackagePage(owner, name, page);
     if (data.length === 0) {
