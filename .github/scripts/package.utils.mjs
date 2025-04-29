@@ -1,10 +1,12 @@
 import { compareBaseVersions, isSameVersion, stringifyVersion } from "./version.utils.mjs";
 
-const images = {
+const packages = {
   api: `${process.env.BASE_IMAGE_NAME}-api`,
   app: `${process.env.BASE_IMAGE_NAME}-app`,
   sync: `${process.env.BASE_IMAGE_NAME}-sync`,
 };
+
+const packageType = 'container';
 
 /**
  * Attempts to parse the latest version from the published packages that a new `dev` version should be based on.
@@ -59,8 +61,14 @@ export const findOutdatedVersions = async (latestVersion) => {
         return;
       }
       const hasReleaseTag = tags.has("edge") || tags.has("release-candidate") || tags.has("latest");
-      if (!hasReleaseTag && compareBaseVersions(latestVersion, version) > 0) {
+      if (!hasReleaseTag && compareBaseVersions(latestVersion, version) >= 0) {
         outdatedVersions.push(version);
+      } else {
+        console.log('skipping version', {
+          version,
+          hasReleaseTag,
+          cmp: compareBaseVersions(latestVersion, version),
+        })
       }
     },
     abort: () => false,
@@ -84,7 +92,7 @@ export const findLatestVersionByPredicate = async (test) => {
 const CACHED_VERSIONS = [];
 let FIRST_UNCACHED_VERSION_PAGE = 0;
 
-const loadVersions = async ({ receive, abort, image }) => {
+const loadVersions = async ({ receive, abort, package: packageName }) => {
   for (const [version, tags, packageId] of CACHED_VERSIONS) {
     receive(version, tags, packageId);
     if (abort()) {
@@ -97,7 +105,7 @@ const loadVersions = async ({ receive, abort, image }) => {
 
   const { parseVersion } = await import("./version.utils.mjs");
 
-  const { owner, name } = getImageInfo(image ?? images.api);
+  const { owner, name } = getPackageInfo(packageName ?? packages.api);
 
   let page = FIRST_UNCACHED_VERSION_PAGE;
   while (true) {
@@ -135,7 +143,7 @@ const loadVersions = async ({ receive, abort, image }) => {
   }
 };
 
-const getImageInfo = (url) => {
+const getPackageInfo = (url) => {
   const [host, owner, name] = url.split("/");
   return { host, owner, name };
 };
@@ -146,7 +154,7 @@ const fetchPackagePage = async (owner, name, page) => {
   try {
     // TODO change this to getAllPackageVersionsForPackageOwnedByOrg
     const response = await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
-      package_type: "container",
+      package_type: packageType,
       package_name: name,
       // TODO change this to `org: owner`
       username: owner,
@@ -166,12 +174,12 @@ export const removePackageVersions = async (versions) => {
   const { getOctokit } = await import("./octokit.mjs");
   const octokit = await getOctokit();
 
-  for (const image of Object.values(images)) {
-    const { owner, name } = getImageInfo(image);
+  for (const packageName of Object.values(packages)) {
+    const { owner, name } = getPackageInfo(packageName);
     for (const version of versions) {
       let packageId = null;
       await loadVersions({
-        image,
+        package: packageName,
         receive: (currentVersion, _tags, currentPackageId) => {
           if (isSameVersion(version, currentVersion)) {
             packageId = currentPackageId;
@@ -180,12 +188,12 @@ export const removePackageVersions = async (versions) => {
         abort: () => packageId !== null,
       });
       if (packageId === null) {
-        console.warn(`Package ${image}:${stringifyVersion(version)} not found, skipping deletion.`);
+        console.warn(`Package ${packageName}:${stringifyVersion(version)} not found, skipping deletion.`);
         continue;
       }
       // TODO change this to deletePackageVersionForOrg
       await octokit.rest.packages.deletePackageVersionForUser({
-        package_type: "container",
+        package_type: packageType,
         package_name: name,
         // TODO change this to `org: owner`
         username: owner,
