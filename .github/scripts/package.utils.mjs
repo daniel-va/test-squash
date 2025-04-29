@@ -87,25 +87,31 @@ const CACHED_VERSIONS = [];
 let FIRST_UNCACHED_VERSION_PAGE = 0;
 
 const loadVersions = async ({ receive, abort, package: packageName }) => {
-  for (const [version, tags, packageId] of CACHED_VERSIONS) {
-    receive(version, tags, packageId);
-    if (abort()) {
+  const isCacheable = packageName === undefined || packageName === packages.api;
+
+  if (isCacheable) {
+    for (const [version, tags, packageId] of CACHED_VERSIONS) {
+      receive(version, tags, packageId);
+      if (abort()) {
+        return;
+      }
+    }
+    if (FIRST_UNCACHED_VERSION_PAGE === -1) {
       return;
     }
-  }
-  if (FIRST_UNCACHED_VERSION_PAGE === -1) {
-    return;
   }
 
   const { parseVersion } = await import("./version.utils.mjs");
 
   const { owner, name } = getPackageInfo(packageName ?? packages.api);
 
-  let page = FIRST_UNCACHED_VERSION_PAGE;
+  let page = isCacheable ? FIRST_UNCACHED_VERSION_PAGE : 0;
   while (true) {
     const data = await fetchPackagePage(owner, name, page);
     if (data.length === 0) {
-      FIRST_UNCACHED_VERSION_PAGE = -1;
+      if (isCacheable) {
+        FIRST_UNCACHED_VERSION_PAGE = -1;
+      }
       return;
     }
     let hasAborted = false;
@@ -122,7 +128,9 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
         }
       }
       for (const version of versions) {
-        CACHED_VERSIONS.push([version, otherTags, entry.id]);
+        if (isCacheable) {
+          CACHED_VERSIONS.push([version, otherTags, entry.id]);
+        }
         if (!hasAborted) {
           receive(version, otherTags, entry.id);
           hasAborted = abort();
@@ -130,7 +138,9 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
       }
     }
     page += 1;
-    FIRST_UNCACHED_VERSION_PAGE = page;
+    if (isCacheable) {
+      FIRST_UNCACHED_VERSION_PAGE = page;
+    }
     if (hasAborted) {
       return;
     }
