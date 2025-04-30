@@ -1,8 +1,8 @@
 import { getOctokit } from "./octokit.mjs";
-import {compareBaseVersions, isSameVersion, parseVersion, stringifyVersion} from "./version.utils.mjs";
-import {packages, packageType} from "./package.config.mjs";
+import { compareBaseVersions, isSameVersion, parseVersion, stringifyVersion } from "./version.utils.mjs";
+import { packages, packageType } from "./package.config.mjs";
 
-const defaultPackage = Object.values(packages)[0]
+const defaultPackage = Object.values(packages)[0];
 
 /**
  * Attempts to parse the latest version from the published packages that a new `dev` version should be based on.
@@ -34,6 +34,13 @@ export const findLatestRcVersion = () => findLatestVersionByPredicate((version) 
  */
 export const findLatestHotfixVersion = () =>
   findLatestVersionByPredicate((version) => version.preRelease?.tag === "hotfix");
+
+/**
+ * Attempts to parse the latest next version from the published packages.
+ * @returns {Promise<object|null>} The latest next version, or `null`.
+ */
+export const findLatestNextVersion = () =>
+  findLatestVersionByPredicate((version) => version.preRelease?.tag === "next");
 
 /**
  * Attempts to parse the latest hotfix version from the published packages.
@@ -110,8 +117,7 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
     }
     let hasAborted = false;
     for (const entry of data) {
-      const tags =
-        packageType === 'npm' ? [entry.name] : entry.metadata.container.tags;
+      const tags = packageType === "npm" ? [entry.name] : entry.metadata.container.tags;
       const versions = [];
       const otherTags = new Set();
       for (const tag of tags) {
@@ -150,11 +156,9 @@ const getPackageInfo = (url) => {
 const fetchPackagePage = async (owner, name, page) => {
   const octokit = getOctokit();
   try {
-    // TODO change this to getAllPackageVersionsForPackageOwnedByOrg
     const response = await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
       package_type: packageType,
       package_name: name,
-      // TODO change this to `org: owner`
       username: owner,
       page,
       per_page: 100,
@@ -188,11 +192,9 @@ export const removePackageVersions = async (versions) => {
         console.warn(`Package ${packageName}:${stringifyVersion(version)} not found, skipping deletion.`);
         continue;
       }
-      // TODO change this to deletePackageVersionForOrg
       await octokit.rest.packages.deletePackageVersionForUser({
         package_type: packageType,
         package_name: name,
-        // TODO change this to `org: owner`
         username: owner,
         package_version_id: packageId,
       });

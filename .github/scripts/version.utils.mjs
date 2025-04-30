@@ -1,7 +1,11 @@
 import {
-  findLatestDevVersion, findLatestHotfixVersion, findLatestRcVersion,
+  findBaseVersionForDev,
+  findLatestDevVersion,
+  findLatestHotfixVersion,
+  findLatestNextVersion,
+  findLatestRcVersion,
   findLatestReleaseVersion,
-} from './package.utils.mjs';
+} from "./package.utils.mjs";
 
 const SEMANTIC_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-\w+)?$/;
 export const parseVersion = (tag) => {
@@ -13,10 +17,7 @@ export const parseVersion = (tag) => {
     major: parseInt(major),
     minor: parseInt(minor),
     patch: parseInt(patch),
-    preRelease:
-      preRelease === undefined || preRelease.length === 0
-        ? null
-        : parsePreRelease(preRelease),
+    preRelease: preRelease === undefined || preRelease.length === 0 ? null : parsePreRelease(preRelease),
   };
 };
 
@@ -35,17 +36,14 @@ export const stringifyVersion = (version) => {
   if (version.preRelease === null) {
     return string;
   }
-  return `${string}-${version.preRelease.tag}${version.preRelease.number ?? ''}`;
+  return `${string}-${version.preRelease.tag}${version.preRelease.number ?? ""}`;
 };
 
 export const isSameVersion = (a, b, { ignorePreRelease } = {}) => {
-  const isEqual =
-    a.major === b.major && a.minor === b.minor && a.patch === b.patch;
+  const isEqual = a.major === b.major && a.minor === b.minor && a.patch === b.patch;
   return (
     (ignorePreRelease && isEqual) ||
-    (isEqual &&
-      a.preRelease?.tag === b.preRelease?.tag &&
-      a.preRelease?.number === b.preRelease?.number)
+    (isEqual && a.preRelease?.tag === b.preRelease?.tag && a.preRelease?.number === b.preRelease?.number)
   );
 };
 
@@ -60,18 +58,33 @@ export const compareBaseVersions = (a, b) => {
 };
 
 /**
- * Determines the version that a new dev version should have based on the preceding version.
+ * Determines the version that a new dev release should have based on the branch that triggered
+ * the release by being merged into the release branch.
  *
- * This function is meant to be used when dev releases should be triggered by merges into `develop`.
- * - If there is no preceding version, the next dev version is `1.0.0-dev1`.
- * - If the preceding version was a full release or a patch, a new minor version is created.
- * - Otherwise, the preceding version was a dev release itself, and we simply have to increment the pre-release number.
+ * This function is meant to be used when Dev releases should be triggered by merges into `main`.
+ * - Merges from `develop` will base their version on the latest dev version.
+ *   If there is already a release candidate for that version, the pre-release number is incremented.
+ * - Merges from any other branch will be regarded as hotfixes and simply increase the latest release's patch number.
  *
- * @param version The preceding version.
+ * @param sourceBranch The source branch's name.
  * @returns {Promise<object>} The next version.
  */
-export const incrementDevVersion = (version) => {
-  const tag = 'dev';
+export const determineNextDevVersion = async (sourceBranch) => {
+  const tag = "dev";
+
+  if (sourceBranch === "next") {
+    const releaseVersion = await findLatestReleaseVersion();
+    if (releaseVersion === null) {
+      throw new Error(`Merging next requires a release to be present.`);
+    }
+    const devVersion = await findLatestDevVersion();
+    if (devVersion === null || !isSameVersion(releaseVersion, devVersion, { ignorePreRelease: true })) {
+      return { major: releaseVersion.major + 1, minor: 0, patch: 0, preRelease: { tag, number: 1 } };
+    }
+    return { ...devVersion, preRelease: { tag, number: devVersion.number + 1 } };
+  }
+
+  const version = await findBaseVersionForDev();
 
   // if there is no previous version,
   // then we start with a new pre-release version.
@@ -103,10 +116,10 @@ export const incrementDevVersion = (version) => {
  * Determines the version that a new release candidate should have based on the branch that triggered
  * the release by being merged into the release branch.
  *
- * This function is meant to be used when release candidates should be triggered by merged into `main`.
- * - Merges from `develop` will base their version on the latest dev version.
- *   If there is already a release candidate for that version, the pre-release number is incremented.
- * - Merges from any other branch will be regarded as hotfixes and simply increase the latest release's patch number.
+ * This function is meant to be used when release candidates should be triggered by merges into `develop`.
+ * - Merges from `next` will create a new major dev release.
+ *   If there is already a dev release for that version, the pre-release number is incremented.
+ * - Merges from any other branch will be regarded as minor changes.
  *
  * @param sourceBranch The source branch's name.
  * @returns {Promise<object>} The next version.
@@ -114,21 +127,16 @@ export const incrementDevVersion = (version) => {
 export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
   // Merges from `develop` are "normal" release candidates.
   // They take their version from the latest dev release.
-  if (sourceBranch === 'develop') {
-    const tag = 'rc';
+  if (sourceBranch === "develop") {
+    const tag = "rc";
 
     const devVersion = await findLatestDevVersion();
     if (devVersion === null) {
-      throw new Error(
-        "Merge from 'develop' expects a dev release to be present, but none was found.",
-      );
+      throw new Error("Merge from 'develop' expects a dev release to be present, but none was found.");
     }
 
     const rcVersion = await findLatestRcVersion();
-    if (
-      rcVersion === null ||
-      !isSameVersion(devVersion, rcVersion, { ignorePreRelease: true })
-    ) {
+    if (rcVersion === null || !isSameVersion(devVersion, rcVersion, { ignorePreRelease: true })) {
       // If there is no rc version or if the dev version has a different base then the rc version,
       // then we use the dev version as base and simply start with the number set to 1.
       return { ...devVersion, preRelease: { tag, number: 1 } };
@@ -144,21 +152,16 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
 
   // Sources other than `develop` are considered to be hotfixes.
 
-  const tag = 'hotfix';
+  const tag = "hotfix";
 
   const releaseVersion = await findLatestReleaseVersion();
   if (releaseVersion === null) {
-    throw new Error(
-      'Hotfix expects a release to be present, but none was found.',
-    );
+    throw new Error("Hotfix expects a release to be present, but none was found.");
   }
 
   const hotfixVersion = await findLatestHotfixVersion();
   console.log({ hotfixVersion });
-  if (
-    hotfixVersion === null ||
-    compareBaseVersions(releaseVersion, hotfixVersion) >= 0
-  ) {
+  if (hotfixVersion === null || compareBaseVersions(releaseVersion, hotfixVersion) >= 0) {
     // If there is no preceding hotfix or if the hotfix has already been released,
     // then we use the release version but increase its patch number.
     return {
@@ -179,24 +182,20 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
  * Determines the version that a new production release should have based on the branch that triggered
  * the release by being merged into the release branch.
  *
- * This function is meant to be used when production releases should be triggered by merged into `main`.
+ * This function is meant to be used when production releases should be triggered by merges into `main`.
  * - Merges from `develop` will base their version on the latest dev version.
  * - Merges from any other branch will be regarded as patches and simply increase the latest release's patch number.
  *
  * @param sourceBranch The source branch's name.
  * @returns {Promise<object>} The next version.
  */
-export const determineNextReleaseVersionBySourceBranch = async (
-  sourceBranch,
-) => {
+export const determineNextReleaseVersionBySourceBranch = async (sourceBranch) => {
   // Merges from `develop` are "normal" release candidates.
   // They take their version from the latest dev release.
-  if (sourceBranch === 'develop') {
+  if (sourceBranch === "develop") {
     const devVersion = await findLatestDevVersion();
     if (devVersion === null) {
-      throw new Error(
-        "Merge from 'develop' expects a dev release to be present, but none was found.",
-      );
+      throw new Error("Merge from 'develop' expects a dev release to be present, but none was found.");
     }
     return { ...devVersion, preRelease: null };
   }
@@ -204,12 +203,32 @@ export const determineNextReleaseVersionBySourceBranch = async (
   // Sources other than `develop` are considered to be patches.
   const releaseVersion = await findLatestReleaseVersion();
   if (releaseVersion === null) {
-    throw new Error(
-      'Hotfix expects a release to be present, but none was found.',
-    );
+    throw new Error("Hotfix expects a release to be present, but none was found.");
   }
   return {
     ...releaseVersion,
     patch: releaseVersion.patch + 1,
   };
+};
+
+/**
+ * Determines the version that a new next version should have.
+ *
+ * This function is meant to be used when next releases should be triggered by merges into `next`.
+ *
+ * @returns {Promise<object>} The next version.
+ */
+export const determineNextNextVersion = async () => {
+  const tag = "next";
+
+  const releaseVersion = await findLatestReleaseVersion();
+  if (releaseVersion === null) {
+    throw new Error("A release version needs to be present to determine the next next version.");
+  }
+
+  const nextVersion = await findLatestNextVersion();
+  if (nextVersion === null) {
+    return { major: releaseVersion.major + 1, minor: 0, patch: 0, preRelease: { tag, number: 1 } };
+  }
+  return { ...nextVersion, preRelease: { tag, number: nextVersion.preRelease.number + 1 } };
 };
