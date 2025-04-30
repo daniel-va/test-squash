@@ -1,10 +1,11 @@
 import {
   findBaseVersionForDev,
   findLatestDevVersion,
-  findLatestHotfixVersion, findLatestNextVersion,
+  findLatestHotfixVersion,
+  findLatestNextVersion,
   findLatestRcVersion,
   findLatestReleaseVersion,
-} from './package.utils.mjs';
+} from "./package.utils.mjs";
 
 const SEMANTIC_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-\w+)?$/;
 export const parseVersion = (tag) => {
@@ -16,10 +17,7 @@ export const parseVersion = (tag) => {
     major: parseInt(major),
     minor: parseInt(minor),
     patch: parseInt(patch),
-    preRelease:
-      preRelease === undefined || preRelease.length === 0
-        ? null
-        : parsePreRelease(preRelease),
+    preRelease: preRelease === undefined || preRelease.length === 0 ? null : parsePreRelease(preRelease),
   };
 };
 
@@ -38,17 +36,14 @@ export const stringifyVersion = (version) => {
   if (version.preRelease === null) {
     return string;
   }
-  return `${string}-${version.preRelease.tag}${version.preRelease.number ?? ''}`;
+  return `${string}-${version.preRelease.tag}${version.preRelease.number ?? ""}`;
 };
 
 export const isSameVersion = (a, b, { ignorePreRelease } = {}) => {
-  const isEqual =
-    a.major === b.major && a.minor === b.minor && a.patch === b.patch;
+  const isEqual = a.major === b.major && a.minor === b.minor && a.patch === b.patch;
   return (
     (ignorePreRelease && isEqual) ||
-    (isEqual &&
-      a.preRelease?.tag === b.preRelease?.tag &&
-      a.preRelease?.number === b.preRelease?.number)
+    (isEqual && a.preRelease?.tag === b.preRelease?.tag && a.preRelease?.number === b.preRelease?.number)
   );
 };
 
@@ -75,12 +70,12 @@ export const compareBaseVersions = (a, b) => {
  * @returns {Promise<object>} The next version.
  */
 export const determineNextDevVersion = async (sourceBranch) => {
-  const tag = 'dev';
+  const tag = "dev";
 
-  if (sourceBranch === 'next') {
-    const releaseVersion = await findLatestReleaseVersion()
+  if (sourceBranch === "next") {
+    const releaseVersion = await findLatestReleaseVersion();
     if (releaseVersion === null) {
-      throw new Error(`Merging next requires a release to be present.`)
+      throw new Error(`Merging next requires a release to be present.`);
     }
     const devVersion = await findLatestDevVersion();
     if (devVersion === null || !isSameVersion(releaseVersion, devVersion, { ignorePreRelease: true })) {
@@ -132,21 +127,16 @@ export const determineNextDevVersion = async (sourceBranch) => {
 export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
   // Merges from `develop` are "normal" release candidates.
   // They take their version from the latest dev release.
-  if (sourceBranch === 'develop') {
-    const tag = 'rc';
+  if (sourceBranch === "develop") {
+    const tag = "rc";
 
     const devVersion = await findLatestDevVersion();
     if (devVersion === null) {
-      throw new Error(
-        "Merge from 'develop' expects a dev release to be present, but none was found.",
-      );
+      throw new Error("Merge from 'develop' expects a dev release to be present, but none was found.");
     }
 
     const rcVersion = await findLatestRcVersion();
-    if (
-      rcVersion === null ||
-      !isSameVersion(devVersion, rcVersion, { ignorePreRelease: true })
-    ) {
+    if (rcVersion === null || !isSameVersion(devVersion, rcVersion, { ignorePreRelease: true })) {
       // If there is no rc version or if the dev version has a different base then the rc version,
       // then we use the dev version as base and simply start with the number set to 1.
       return { ...devVersion, preRelease: { tag, number: 1 } };
@@ -162,21 +152,16 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
 
   // Sources other than `develop` are considered to be hotfixes.
 
-  const tag = 'hotfix';
+  const tag = "hotfix";
 
   const releaseVersion = await findLatestReleaseVersion();
   if (releaseVersion === null) {
-    throw new Error(
-      'Hotfix expects a release to be present, but none was found.',
-    );
+    throw new Error("Hotfix expects a release to be present, but none was found.");
   }
 
   const hotfixVersion = await findLatestHotfixVersion();
   console.log({ hotfixVersion });
-  if (
-    hotfixVersion === null ||
-    compareBaseVersions(releaseVersion, hotfixVersion) >= 0
-  ) {
+  if (hotfixVersion === null || compareBaseVersions(releaseVersion, hotfixVersion) >= 0) {
     // If there is no preceding hotfix or if the hotfix has already been released,
     // then we use the release version but increase its patch number.
     return {
@@ -204,17 +189,13 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
  * @param sourceBranch The source branch's name.
  * @returns {Promise<object>} The next version.
  */
-export const determineNextReleaseVersionBySourceBranch = async (
-  sourceBranch,
-) => {
+export const determineNextReleaseVersionBySourceBranch = async (sourceBranch) => {
   // Merges from `develop` are "normal" release candidates.
   // They take their version from the latest dev release.
-  if (sourceBranch === 'develop') {
+  if (sourceBranch === "develop") {
     const devVersion = await findLatestDevVersion();
     if (devVersion === null) {
-      throw new Error(
-        "Merge from 'develop' expects a dev release to be present, but none was found.",
-      );
+      throw new Error("Merge from 'develop' expects a dev release to be present, but none was found.");
     }
     return { ...devVersion, preRelease: null };
   }
@@ -222,16 +203,13 @@ export const determineNextReleaseVersionBySourceBranch = async (
   // Sources other than `develop` are considered to be patches.
   const releaseVersion = await findLatestReleaseVersion();
   if (releaseVersion === null) {
-    throw new Error(
-      'Hotfix expects a release to be present, but none was found.',
-    );
+    throw new Error("Hotfix expects a release to be present, but none was found.");
   }
   return {
     ...releaseVersion,
     patch: releaseVersion.patch + 1,
   };
 };
-
 
 /**
  * Determines the version that a new next version should have.
@@ -241,7 +219,7 @@ export const determineNextReleaseVersionBySourceBranch = async (
  * @returns {Promise<object>} The next version.
  */
 export const determineNextNextVersion = async () => {
-  const tag = 'next';
+  const tag = "next";
 
   const releaseVersion = await findLatestReleaseVersion();
   if (releaseVersion === null) {

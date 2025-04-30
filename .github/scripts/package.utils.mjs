@@ -1,11 +1,6 @@
-import { getOctokit } from './octokit.mjs';
-import {
-  compareBaseVersions,
-  isSameVersion,
-  parseVersion,
-  stringifyVersion,
-} from './version.utils.mjs';
-import { packages, packageType } from './package.config.mjs';
+import { getOctokit } from "./octokit.mjs";
+import { compareBaseVersions, isSameVersion, parseVersion, stringifyVersion } from "./version.utils.mjs";
+import { packages, packageType } from "./package.config.mjs";
 
 const defaultPackage = Object.values(packages)[0];
 
@@ -19,50 +14,40 @@ const defaultPackage = Object.values(packages)[0];
  * @returns {Promise<object|null>} The latest dev version, or `null`.
  */
 export const findBaseVersionForDev = () =>
-  findLatestVersionByPredicate(
-    (version) =>
-      version.preRelease === null || version.preRelease.tag === 'dev',
-  );
+  findLatestVersionByPredicate((version) => version.preRelease === null || version.preRelease.tag === "dev");
 
 /**
  * Attempts to parse the latest dev version from the published packages.
  * @returns {Promise<object|null>} The latest dev version, or `null`.
  */
-export const findLatestDevVersion = () =>
-  findLatestVersionByPredicate((version) => version.preRelease?.tag === 'dev');
+export const findLatestDevVersion = () => findLatestVersionByPredicate((version) => version.preRelease?.tag === "dev");
 
 /**
  * Attempts to parse the latest release candidate version from the published packages.
  * @returns {Promise<object|null>} The latest rc version, or `null`.
  */
-export const findLatestRcVersion = () =>
-  findLatestVersionByPredicate((version) => version.preRelease?.tag === 'rc');
+export const findLatestRcVersion = () => findLatestVersionByPredicate((version) => version.preRelease?.tag === "rc");
 
 /**
  * Attempts to parse the latest hotfix version from the published packages.
  * @returns {Promise<object|null>} The latest hotfix version, or `null`.
  */
 export const findLatestHotfixVersion = () =>
-  findLatestVersionByPredicate(
-    (version) => version.preRelease?.tag === 'hotfix',
-  );
+  findLatestVersionByPredicate((version) => version.preRelease?.tag === "hotfix");
 
 /**
  * Attempts to parse the latest next version from the published packages.
  * @returns {Promise<object|null>} The latest next version, or `null`.
  */
 export const findLatestNextVersion = () =>
-  findLatestVersionByPredicate((version) => version.preRelease?.tag === 'next');
+  findLatestVersionByPredicate((version) => version.preRelease?.tag === "next");
 
 /**
  * Attempts to parse the latest hotfix version from the published packages.
  * @returns {Promise<object|null>} The latest hotfix version, or `null`.
  */
 export const findLatestReleasableVersion = () =>
-  findLatestVersionByPredicate(
-    (version) =>
-      version.preRelease?.tag === 'hotfix' || version.preRelease?.tag === 'rc',
-  );
+  findLatestVersionByPredicate((version) => version.preRelease?.tag === "hotfix" || version.preRelease?.tag === "rc");
 
 /**
  * Attempts to parse the latest release version from the published packages.
@@ -78,8 +63,7 @@ export const findOutdatedVersions = async (latestVersion) => {
       if (version.preRelease === null) {
         return;
       }
-      const hasReleaseTag =
-        tags.has('edge') || tags.has('release-candidate') || tags.has('latest');
+      const hasReleaseTag = tags.has("edge") || tags.has("release-candidate") || tags.has("latest");
       if (!hasReleaseTag && compareBaseVersions(latestVersion, version) >= 0) {
         outdatedVersions.push(version);
       }
@@ -106,8 +90,7 @@ const CACHED_VERSIONS = [];
 let FIRST_UNCACHED_VERSION_PAGE = 1;
 
 const loadVersions = async ({ receive, abort, package: packageName }) => {
-  const isCacheable =
-    packageName === undefined || packageName === defaultPackage;
+  const isCacheable = packageName === undefined || packageName === defaultPackage;
 
   if (isCacheable) {
     for (const [version, tags, packageId] of CACHED_VERSIONS) {
@@ -134,8 +117,7 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
     }
     let hasAborted = false;
     for (const entry of data) {
-      const tags =
-        packageType === 'npm' ? [entry.name] : entry.metadata.container.tags;
+      const tags = packageType === "npm" ? [entry.name] : entry.metadata.container.tags;
       const versions = [];
       const otherTags = new Set();
       for (const tag of tags) {
@@ -167,21 +149,20 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
 };
 
 const getPackageInfo = (url) => {
-  const [host, owner, name] = url.split('/');
+  const [host, owner, name] = url.split("/");
   return { host, owner, name };
 };
 
 const fetchPackagePage = async (owner, name, page) => {
   const octokit = getOctokit();
   try {
-    const response =
-      await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
-        package_type: packageType,
-        package_name: name,
-        org: owner,
-        page,
-        per_page: 100,
-      });
+    const response = await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
+      package_type: packageType,
+      package_name: name,
+      username: owner,
+      page,
+      per_page: 100,
+    });
     return response.data;
   } catch (e) {
     if (e.status === 404) {
@@ -208,15 +189,13 @@ export const removePackageVersions = async (versions) => {
         abort: () => packageId !== null,
       });
       if (packageId === null) {
-        console.warn(
-          `Package ${packageName}:${stringifyVersion(version)} not found, skipping deletion.`,
-        );
+        console.warn(`Package ${packageName}:${stringifyVersion(version)} not found, skipping deletion.`);
         continue;
       }
-      await octokit.rest.packages.deletePackageVersionForOrg({
+      await octokit.rest.packages.deletePackageVersionForUser({
         package_type: packageType,
         package_name: name,
-        org: owner,
+        username: owner,
         package_version_id: packageId,
       });
     }
