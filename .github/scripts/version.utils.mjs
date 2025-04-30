@@ -129,6 +129,6 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
   // If the preceding hotfix has not yet been released, we simply increment its version number.
   return {
     ...hotfixVersion,
-    preRelease: { tag, number: hotfixVersion.number + 1 },
+    preRelease: { tag, number: hotfixVersion.preRelease.number + 1 },
   };
 };
