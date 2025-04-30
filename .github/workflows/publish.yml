@@ -36,6 +36,7 @@ jobs:
             const { findSourceAndTargetBranches } = await import('${{ github.workspace }}/.github/scripts/branch.utils.mjs');
             const {
               determineNextDevVersion,
+              determineNextRcVersionBySourceBranch,
               stringifyVersion,
             } = await import('${{ github.workspace }}/.github/scripts/version.utils.mjs');
 
