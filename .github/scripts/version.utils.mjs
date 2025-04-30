@@ -1,5 +1,9 @@
-// TODO is this possible?
-import { findLatestDevVersion, findLatestReleaseVersion } from "./package.utils.mjs";
+import {
+  findLatestDevVersion,
+  findLatestReleaseVersion,
+  findLatestRcVersion,
+  findLatestHotfixVersion,
+} from "./package.utils.mjs";
 
 const SEMANTIC_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-\w+)?$/;
 export const parseVersion = (tag) => {
@@ -84,7 +88,6 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
   // Merges from `develop` are "normal" release candidates.
   // They take their version from the latest dev release.
   if (sourceBranch === "develop") {
-    const { findLatestDevVersion, findLatestRcVersion } = await import("./package.utils.mjs");
     const tag = "rc";
 
     const devVersion = await findLatestDevVersion();
@@ -106,7 +109,6 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
 
   // Sources other than `develop` are considered to be hotfixes.
 
-  const { findLatestReleaseVersion, findLatestHotfixVersion } = await import("./package.utils.mjs");
   const tag = "hotfix";
 
   const releaseVersion = await findLatestReleaseVersion();

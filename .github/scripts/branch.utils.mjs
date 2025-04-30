@@ -1,3 +1,5 @@
+import {getOctokit} from "./octokit.mjs";
+
 /**
  * Determines the source and target branches of a workflow.
  *
@@ -11,8 +13,7 @@
  * @returns {Promise<[string|null, string]>} The source and target branch names.
  */
 export const findSourceAndTargetBranches = async (context) => {
-  const { getOctokit } = await import("./octokit.mjs");
-  const octokit = await getOctokit();
+  const octokit = getOctokit();
 
   // The branch on which the current workflow is running.
   const targetBranch = context.payload.ref.replace("refs/heads/", "");

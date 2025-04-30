@@ -1,3 +1,4 @@
+import { getOctokit } from "./octokit.mjs";
 import { compareBaseVersions, isSameVersion, stringifyVersion } from "./version.utils.mjs";
 
 const packages = {
@@ -101,8 +102,6 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
     }
   }
 
-  const { parseVersion } = await import("./version.utils.mjs");
-
   const { owner, name } = getPackageInfo(packageName ?? packages.api);
 
   let page = isCacheable ? FIRST_UNCACHED_VERSION_PAGE : 1;
@@ -153,8 +152,7 @@ const getPackageInfo = (url) => {
 };
 
 const fetchPackagePage = async (owner, name, page) => {
-  const { getOctokit } = await import("./octokit.mjs");
-  const octokit = await getOctokit();
+  const octokit = getOctokit();
   try {
     // TODO change this to getAllPackageVersionsForPackageOwnedByOrg
     const response = await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
@@ -175,8 +173,7 @@ const fetchPackagePage = async (owner, name, page) => {
 };
 
 export const removePackageVersions = async (versions) => {
-  const { getOctokit } = await import("./octokit.mjs");
-  const octokit = await getOctokit();
+  const octokit = getOctokit();
 
   for (const packageName of Object.values(packages)) {
     const { owner, name } = getPackageInfo(packageName);
