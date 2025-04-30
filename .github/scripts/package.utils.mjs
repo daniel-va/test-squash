@@ -1,12 +1,8 @@
-import { compareBaseVersions, isSameVersion, stringifyVersion } from "./version.utils.mjs";
+import { getOctokit } from "./octokit.mjs";
+import {compareBaseVersions, isSameVersion, parseVersion, stringifyVersion} from "./version.utils.mjs";
+import {packages, packageType} from "./package.config.mjs";
 
-const packages = {
-  api: `${process.env.BASE_IMAGE_NAME}-api`,
-  app: `${process.env.BASE_IMAGE_NAME}-app`,
-  sync: `${process.env.BASE_IMAGE_NAME}-sync`,
-};
-
-const packageType = 'container';
+const defaultPackage = Object.values(packages)[0]
 
 /**
  * Attempts to parse the latest version from the published packages that a new `dev` version should be based on.
@@ -87,7 +83,7 @@ const CACHED_VERSIONS = [];
 let FIRST_UNCACHED_VERSION_PAGE = 1;
 
 const loadVersions = async ({ receive, abort, package: packageName }) => {
-  const isCacheable = packageName === undefined || packageName === packages.api;
+  const isCacheable = packageName === undefined || packageName === defaultPackage;
 
   if (isCacheable) {
     for (const [version, tags, packageId] of CACHED_VERSIONS) {
@@ -101,9 +97,7 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
     }
   }
 
-  const { parseVersion } = await import("./version.utils.mjs");
-
-  const { owner, name } = getPackageInfo(packageName ?? packages.api);
+  const { owner, name } = getPackageInfo(packageName ?? defaultPackage);
 
   let page = isCacheable ? FIRST_UNCACHED_VERSION_PAGE : 1;
   while (true) {
@@ -116,7 +110,8 @@ const loadVersions = async ({ receive, abort, package: packageName }) => {
     }
     let hasAborted = false;
     for (const entry of data) {
-      const { tags } = entry.metadata.container;
+      const tags =
+        packageType === 'npm' ? [entry.name] : entry.metadata.container.tags;
       const versions = [];
       const otherTags = new Set();
       for (const tag of tags) {
@@ -153,8 +148,7 @@ const getPackageInfo = (url) => {
 };
 
 const fetchPackagePage = async (owner, name, page) => {
-  const { getOctokit } = await import("./octokit.mjs");
-  const octokit = await getOctokit();
+  const octokit = getOctokit();
   try {
     // TODO change this to getAllPackageVersionsForPackageOwnedByOrg
     const response = await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
@@ -175,8 +169,7 @@ const fetchPackagePage = async (owner, name, page) => {
 };
 
 export const removePackageVersions = async (versions) => {
-  const { getOctokit } = await import("./octokit.mjs");
-  const octokit = await getOctokit();
+  const octokit = getOctokit();
 
   for (const packageName of Object.values(packages)) {
     const { owner, name } = getPackageInfo(packageName);
