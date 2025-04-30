@@ -41,7 +41,7 @@ jobs:
 
             const [source, target] = await findSourceAndTargetBranches(context);
             const nextVersion = target === 'develop'
-              ? await determineNextDevVersion(prevVersion, source)
+              ? await determineNextDevVersion(source)
               : await determineNextRcVersionBySourceBranch(source);
 
             return stringifyVersion(nextVersion);
