@@ -32,15 +32,13 @@ jobs:
           result-encoding: string
           script: |
             const { findSourceAndTargetBranches } = await import('${{ github.workspace }}/.github/scripts/branch.utils.mjs');
-            const { findBaseVersionForDev } = await import('${{ github.workspace }}/.github/scripts/package.utils.mjs');
             const {
-              incrementDevVersion,
+              determineNextDevVersion,
               stringifyVersion,
             } = await import('${{ github.workspace }}/.github/scripts/version.utils.mjs');
 
-            const prevVersion = await findBaseVersionForDev();
             const [source, target] = await findSourceAndTargetBranches(context);
-            const nextVersion = incrementDevVersion(prevVersion, source);
+            const nextVersion = await determineNextDevVersion(prevVersion, source);
 
             return stringifyVersion(nextVersion);
 
