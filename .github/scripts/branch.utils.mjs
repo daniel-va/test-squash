@@ -1,4 +1,4 @@
-import {getOctokit} from "./octokit.mjs";
+import { getOctokit } from "./octokit.mjs";
 
 /**
  * Determines the source and target branches of a workflow.
