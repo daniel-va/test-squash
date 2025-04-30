@@ -11,7 +11,7 @@ export const parseVersion = (tag) => {
     major: parseInt(major),
     minor: parseInt(minor),
     patch: parseInt(patch),
-    preRelease: (preRelease === undefined || preRelease.length === 0) ? null : parsePreRelease(preRelease),
+    preRelease: preRelease === undefined || preRelease.length === 0 ? null : parsePreRelease(preRelease),
   };
 };
 
@@ -115,6 +115,7 @@ export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
   }
 
   const hotfixVersion = await findLatestHotfixVersion();
+  console.log({ hotfixVersion });
   if (hotfixVersion === null || compareBaseVersions(releaseVersion, hotfixVersion) >= 0) {
     // If there is no preceding hotfix or if the hotfix has already been released,
     // then we use the release version but increase its patch number.
